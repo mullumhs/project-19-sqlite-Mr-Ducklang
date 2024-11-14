@@ -2,27 +2,24 @@ import sqlite3
 
 
 def create_connection():
-    conn = sqlite3.connect('mymovies.db')
+    conn = sqlite3.connect('my_movie_collection.db')
     return conn
 
 
 def create_table(conn):
     cursor = conn.cursor()
-    
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS movies (
                    
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
         
-        title TEXT NOT NULL
+        title TEXT NOT NULL,
 
         director TEXT,
 
         year INTEGER,
                    
-        rating FLOAT,
-                   
-        genre TEXT,   
+        rating FLOAT
     )
     ''')
     conn.commit()
@@ -30,14 +27,16 @@ def create_table(conn):
 
 def add_movie(conn, title, director, year, rating):
     cursor = conn.cursor()
-    movie = {f'{title}, {director}, {year}, {rating}'}
-    cursor.execute(f'''
-    
-    INSERT INTO movies (title, director, year, rating)
-                   
-    VALUES ('{movie[0]}', '{movie[1]}', '{movie[2]}', '{movie[3]}',) 
 
-    ''')
+    cursor.execute(''' 
+    
+    INSERT INTO movies (title, director, year, rating) 
+
+    VALUES (?, ?, ?, ?) 
+
+    ''', (title, director, year, rating))
+    conn.commit()
+
 
 
 def display_all_movies(conn):
@@ -54,17 +53,23 @@ def display_all_movies(conn):
 
 def update_movie_rating(conn, title, new_rating):
     cursor = conn.cursor()
-    cursor.execute(f'UPDATE movies, SET rating = {new_rating}, WHERE title = {title}')
+    cursor.execute(f'''
+    UPDATE movies
+    SET rating = {new_rating} 
+    WHERE title = '{title}'
+    ''')
+    conn.commit()
 
 
 def delete_movie(conn, title):
     cursor = conn.cursor()
-    cursor.execute(f'DELETE movies, WHERE title = {title}')
+    cursor.execute(f'''DELETE FROM movies WHERE title = '{title}' ''')
+    conn.commit()
 
 
 def find_movies_by_director(conn, director):
     cursor = conn.cursor()
-    cursor.execute(f'SELECT movies, WHERE director = {director}')
+    cursor.execute(f'''SELECT title, year, rating FROM movies WHERE director = '{director}' ''')
     director_movies = cursor.fetchall()
     print(f'Movies by {director}:')
     for movie in director_movies:
@@ -167,7 +172,7 @@ def main():
                 print("Invalid choice. Please try again.")
 
         
-
+        
         conn.close()
 
     else:
