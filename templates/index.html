@@ -10,8 +10,36 @@
   </head>
 
   <body>
-    <h1>Movies in Database</h1>
+    <h1>Movie Database</h1>
 
-    <p>{{ movies }}</p>
+    <a href="{{ url_for('add_movie') }}">Add a New Movie</a>
+
+    <table>
+      <tr>
+        <th>Title</th>
+
+        <th>Director</th>
+
+        <th>Year</th>
+
+        <th>Rating</th>
+      </tr>
+
+      {% for movie in movies %}
+
+      <tr>
+        <td>{{ movie['title'] }}</td>
+
+        <td>{{ movie['director'] }}</td>
+
+        <td>{{ movie['year'] }}</td>
+
+        <td>{{ movie['rating'] }}</td>
+
+        <a href="{{ url_for('edit_movie', id=movie.id) }}">Edit</a>
+      </tr>
+
+      {% endfor %}
+    </table>
   </body>
 </html>
