@@ -1,121 +1,57 @@
+from flask import Flask, render_template, request, redirect, url_for
 import sqlite3
 
-
-
-# Create a connection to a new database (or connect to an existing one)
-conn = sqlite3.connect('movies.db')
-
-# Create a cursor object+
-cursor = conn.cursor()
+app = Flask(__name__)
 
 
 
-# Create the movies table
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS movies (
-
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-
-    title TEXT NOT NULL,
-
-    director TEXT,
-
-    year INTEGER,
-
-    rating FLOAT
-               
-    genre TEXT
-)
-''')
-
-
-# Insert a single movie using string formatting (UNSAFE - vulnerable to SQL injection)
-
-movie = ('The Bee Movie', 'Steve Hickner, Simon J. Smith', 2007, 6.1)
-
-cursor.execute(f'''
-
-INSERT INTO movies (title, director, year, rating)
-
-VALUES ('{movie[0]}', '{movie[1]}', {movie[2]}, {movie[3]})
-
-''')
-
-
-# Insert a single movie using a parameterized query (SAFE)
-
-cursor.execute('''
-
-INSERT INTO movies (title, director, year, rating)
-
-VALUES (?, ?, ?, ?)
-
-''', ('The Peanuts Movie', 'Steve Martino', 2015, 7))
+def get_db_connection():
+    conn = sqlite3.connect('my_movie_collection.db')
+    return conn
 
 
 
-# List of movies to insert
+@app.route('/')
+def index():
+    conn = get_db_connection()
+    movies = conn.execute('SELECT * FROM movies').fetchall()
+    conn.close()
+    return render_template('index.html', movies=movies)
 
-movies = [
+@app.route('/add', methods=['GET', 'POST'])
+def add_movie():
+    # On a form submission (POST)
 
-    ('Shrek', 'Andrew Adamson & Vicky Jenson', 2001, 7.9),
+    if request.method == 'POST':
 
-    ('Puss in Boots: The Last Wish', 'Joel Crawford', 2022, 7.8),
+        title = request.form['title']
 
-    ('Megamind', ' Tom McGrath', 2010, 7.3),
+        director = request.form['director']
 
-    ('The Princess and The Frog', 'John Musker & Ron Clements', 2009, 7.1)
+        year = int(request.form['year'])
 
-]
+        rating = float(request.form['rating'])
 
+        
 
+        conn = get_db_connection()
 
-# Insert multiple movies
+        conn.execute('INSERT INTO movies (title, director, year, rating) VALUES (?, ?, ?, ?)',
 
-cursor.executemany('''
+                     (title, director, year, rating))
 
-INSERT INTO movies (title, director, year, rating)
+        conn.commit()
 
-VALUES (?, ?, ?, ?)
+        conn.close()
 
-''', movies)
+        return redirect(url_for('index'))
 
-# Select all movies
+    
+    # On visiting the page (GET)
 
-cursor.execute('SELECT * FROM movies')
-
-all_movies = cursor.fetchall()
-
-print("All movies:")
-
-for movie in all_movies:
-
-    print(movie)
-
-
-
-# Select movies after 2000
-
-cursor.execute('SELECT title, year FROM movies WHERE year > 2000')
-
-recent_movies = cursor.fetchall()
-
-print("\nMovies after 2000:")
-
-for movie in recent_movies:
-
-    print(f"{movie[0]} ({movie[1]})")
+    return render_template('add.html')
 
 
 
-# Select average rating
-
-cursor.execute('SELECT AVG(rating) FROM movies')
-
-avg_rating = cursor.fetchone()[0]
-
-print(f"\nAverage rating: {avg_rating:.2f}")
-
-
-
-conn.close()
+if __name__ == '__main__':
+    app.run(debug=True)
