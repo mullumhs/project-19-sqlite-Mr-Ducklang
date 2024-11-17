@@ -95,6 +95,27 @@ def delete_movie(id):
     db.session.commit()
 
     return redirect(url_for('index'))
+
+@app.route('/search')
+
+def search_movies():
+    # TODO: Use Flask-SQLAlchemy to search for movies
+    # Hint: You can use Movie.query.filter() with SQLAlchemy's like() method
+    if request.method == 'POST':
+
+        movie.title = request.form['title']
+
+
+        db.session.commit()
+
+        return redirect(url_for('index'))
+    
+    query = request.args.get('query', '')
+    
+    results = db.session.query(Movie).filter(Movie.title.like(f'%{query}%')).all()
+
+    return render_template('search.html', movies=results, query=query)
+
 if __name__ == '__main__':
 
     app.run(debug=True)
